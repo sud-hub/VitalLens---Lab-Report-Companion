@@ -1,4 +1,4 @@
-# Lab Report Companion
+# VitalLens - Lab Report Companion
 
 A web application for digitizing, storing, and tracking laboratory test results using offline OCR technology.
 
@@ -53,7 +53,7 @@ The system exclusively supports three lab panels:
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/sud-hub/VitalLens---Lab-Report-Companion.git
 cd lab-report-companion
 ```
 
@@ -384,15 +384,3 @@ To add support for additional lab panels:
 3. Add test aliases for parsing variations
 4. Update parser logic in `app/parsing/lab_parser.py`
 5. Add guidance messages in `app/rules/guidance_engine.py`
-
-## License
-
-[Add your license information here]
-
-## Contributing
-
-[Add contribution guidelines here]
-
-## Support
-
-For issues or questions, please [add contact information or issue tracker link].
