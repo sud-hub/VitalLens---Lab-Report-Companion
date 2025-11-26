@@ -12,10 +12,10 @@ from app.db.models import User
 from app.schemas.reports import ReportSummary
 from app.crud import reports as report_crud
 from app.crud import tests as test_crud
-from app.ocr.engine import run_ocr_on_image_bytes
-from app.parsing.lab_parser import parse_lab_report
+from app.ocr.gemini_engine import extract_with_gemini
 from app.parsing.mappings import map_test_name_to_type
 from app.rules.reference_ranges import compute_status
+
 
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -42,12 +42,11 @@ async def upload_report(
     This endpoint:
     1. Validates file type and size
     2. Creates a Report record
-    3. Runs OCR on the uploaded file
-    4. Parses OCR results to extract test values
-    5. Maps test names to TestTypes using aliases
-    6. Computes status for each test based on reference ranges
-    7. Saves TestResult records
-    8. Marks Report as successful or failed
+    3. Uses Gemini LLM to extract test values from the uploaded file
+    4. Maps test names to TestTypes using aliases
+    5. Computes status for each test based on reference ranges
+    6. Saves TestResult records
+    7. Marks Report as successful or failed
     
     Args:
         file: Uploaded file (JPEG, PNG, or PDF)
@@ -59,7 +58,7 @@ async def upload_report(
         
     Raises:
         HTTPException 400: If file type is unsupported or file is too large
-        HTTPException 500: If OCR or parsing fails
+        HTTPException 500: If Gemini extraction or processing fails
         
     Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.3, 4.4,
                5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3,
@@ -93,21 +92,19 @@ async def upload_report(
     )
     
     try:
-        # Requirement 4.1: Run OCR on uploaded file
+        # Requirement 4.1: Run Gemini extraction on uploaded file
         is_pdf = file.content_type == SUPPORTED_PDF_TYPE
-        ocr_result = run_ocr_on_image_bytes(file_bytes, is_pdf=is_pdf)
+        gemini_result = extract_with_gemini(file_bytes, is_pdf=is_pdf)
         
-        # Requirement 4.3: Store raw OCR text
-        raw_text = ocr_result.get("raw_text", "")
-        
-        # Requirement 4.4: Handle OCR failure
-        if not raw_text:
+        # Check if extraction was successful
+        if not gemini_result.get("success"):
+            error_msg = gemini_result.get("error_message", "Unknown error")
             report_crud.update_report_ocr(
                 db=db,
                 report_id=report.id,
-                raw_text="",
+                raw_text=gemini_result.get("raw_response", ""),
                 success=False,
-                notes="OCR extraction failed: no text extracted"
+                notes=f"Gemini extraction failed: {error_msg}"
             )
             return ReportSummary(
                 id=report.id,
@@ -117,8 +114,27 @@ async def upload_report(
                 test_count=0
             )
         
-        # Requirements 5.1, 5.2, 5.3, 5.4, 5.5: Parse OCR results
-        parsed_tests = parse_lab_report(ocr_result)
+        # Get extracted test results (already parsed by Gemini)
+        parsed_tests = gemini_result.get("test_results", [])
+        raw_response = gemini_result.get("raw_response", "")
+        
+        # Requirement 4.4: Handle extraction failure
+        if not parsed_tests:
+            report_crud.update_report_ocr(
+                db=db,
+                report_id=report.id,
+                raw_text=raw_response,
+                success=False,
+                notes="Gemini extraction completed but no test results found"
+            )
+            return ReportSummary(
+                id=report.id,
+                original_filename=report.original_filename,
+                uploaded_at=report.uploaded_at,
+                parsed_success=False,
+                test_count=0
+            )
+
         
         # Track successfully saved test results
         saved_count = 0
@@ -149,7 +165,7 @@ async def upload_report(
                 value=value,
                 unit=unit,
                 status=test_status,
-                confidence=ocr_result.get("confidence")
+                confidence=None  # Gemini doesn't provide confidence scores
             )
             
             saved_count += 1
@@ -166,7 +182,7 @@ async def upload_report(
         report = report_crud.update_report_ocr(
             db=db,
             report_id=report.id,
-            raw_text=raw_text,
+            raw_text=raw_response,
             success=success,
             notes=notes
         )

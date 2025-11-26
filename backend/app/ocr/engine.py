@@ -145,14 +145,41 @@ class PDFTextExtractor:
         pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
         
         text_lines = []
+        is_scanned = True
         
-        # Extract text from each page
+        # First pass: try to extract text directly
         for page_num in range(pdf_document.page_count):
             page = pdf_document[page_num]
             text = page.get_text()
             if text.strip():
                 text_lines.append(text)
+                is_scanned = False
         
+        # If no text was extracted (or very little), it might be a scanned PDF
+        # In this case, we need to convert pages to images and run OCR
+        if is_scanned:
+            # Clear any partial text
+            text_lines = []
+            
+            # Use PaddleOCR for scanned PDFs
+            engine = PaddleOCREngine()
+            
+            for page_num in range(pdf_document.page_count):
+                page = pdf_document[page_num]
+                
+                # Render page to image (pixmap)
+                # zoom=2 to increase resolution for better OCR
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                
+                # Get image bytes
+                img_bytes = pix.tobytes("png")
+                
+                # Run OCR on the page image
+                ocr_result = engine.process_image(img_bytes)
+                
+                if ocr_result.raw_text.strip():
+                    text_lines.append(ocr_result.raw_text)
+
         pdf_document.close()
         
         # Combine all pages
@@ -160,7 +187,7 @@ class PDFTextExtractor:
         
         return OCRResult(
             raw_text=raw_text,
-            confidence=1.0,  # PDF text extraction is deterministic
+            confidence=1.0 if not is_scanned else 0.8,  # Lower confidence for OCR
             blocks=None
         )
 

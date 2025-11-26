@@ -1,8 +1,6 @@
 alembic==1.17.2
-annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.11.0
-attrs==25.4.0
 bcrypt==3.2.2
 certifi==2025.11.12
 cffi==2.0.0
@@ -10,7 +8,7 @@ click==8.3.1
 colorama==0.4.6
 cryptography==46.0.3
 ecdsa==0.19.1
-email-validator==2.2.0
+email-validator==2.3.0
 fastapi==0.122.0
 greenlet==3.2.4
 h11==0.16.0
@@ -43,7 +41,11 @@ starlette==0.50.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.38.0
-paddlepaddle==3.0.0
-paddleocr==2.9.2
-pymupdf==1.25.4
-Pillow==10.0.0
+
+# Gemini AI dependencies
+google-genai==0.3.0
+Pillow==10.4.0
+
+# PDF processing
+PyPDF2==3.0.1
+PyMuPDF==1.24.13
