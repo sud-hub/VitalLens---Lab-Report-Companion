@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../api/client';
+import { FaArrowUp, FaArrowDown, FaArrowRight, FaExclamationTriangle } from 'react-icons/fa';
 
 interface TestSummaryCardProps {
   testKey: string;
@@ -91,14 +92,14 @@ function TestSummaryCard({ testKey }: TestSummaryCardProps) {
   };
 
   // Trend icon mapping
-  const getTrendIcon = (trend: string | null): string => {
-    if (!trend) return '';
-    const trendIcons: Record<string, string> = {
-      improving: '↗️',
-      worsening: '↘️',
-      stable: '→',
+  const getTrendIcon = (trend: string | null) => {
+    if (!trend) return null;
+    const trendIcons: Record<string, JSX.Element> = {
+      improving: <FaArrowUp />,
+      worsening: <FaArrowDown />,
+      stable: <FaArrowRight />,
     };
-    return trendIcons[trend] || '';
+    return trendIcons[trend] || null;
   };
 
   // Trend color mapping
@@ -233,7 +234,7 @@ function TestSummaryCard({ testKey }: TestSummaryCardProps) {
             gap: '12px',
           }}
         >
-          <span style={{ fontSize: '24px' }}>{getTrendIcon(guidance.trend)}</span>
+          <span style={{ fontSize: '24px', display: 'flex', alignItems: 'center' }}>{getTrendIcon(guidance.trend)}</span>
           <div style={{ flex: 1 }}>
             <div
               style={{
@@ -296,8 +297,8 @@ function TestSummaryCard({ testKey }: TestSummaryCardProps) {
           lineHeight: '1.6',
         }}
       >
-        <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>
-          ⚠️ Important Medical Disclaimer
+        <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaExclamationTriangle /> Important Medical Disclaimer
         </div>
         <p style={{ margin: 0 }}>{guidance.disclaimer}</p>
       </div>

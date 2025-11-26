@@ -12,6 +12,7 @@ import {
   TooltipProps,
 } from 'recharts';
 import apiClient from '../api/client';
+import { FaExclamationTriangle } from 'react-icons/fa';
 
 interface TestHistoryChartProps {
   testKey: string;
@@ -49,7 +50,7 @@ interface ChartDataPoint {
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as ChartDataPoint;
-    
+
     // Status color mapping
     const statusColors: Record<string, string> = {
       LOW: '#ffc107',
@@ -322,7 +323,7 @@ function TestHistoryChart({ testKey }: TestHistoryChartProps) {
           color: '#856404',
         }}
       >
-        <strong>⚠️ Disclaimer:</strong> This is general educational information and
+        <strong style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FaExclamationTriangle /> Disclaimer:</strong> This is general educational information and
         NOT a medical diagnosis. Please consult a qualified doctor for medical advice
         and interpretation of your lab results.
       </div>
