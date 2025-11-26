@@ -1,0 +1,21 @@
+# Environment Variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.kiro/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+#cache
+.pytest_cache/
