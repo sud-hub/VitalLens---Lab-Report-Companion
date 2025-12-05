@@ -21,8 +21,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
-# Requirements 2.4, 2.5: Enable CORS for frontend communication
+# Enable CORS for frontend communication
 cors_origins = ["*"]  # Configure appropriately for production
 if hasattr(settings, 'CORS_ORIGINS'):
     cors_origins = settings.CORS_ORIGINS.split(",") if isinstance(settings.CORS_ORIGINS, str) else settings.CORS_ORIGINS

@@ -30,7 +30,7 @@ def compute_status(test_type: TestType, value: float) -> str:
     
     Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5
     """
-    # Requirement 7.4: When a TestType has no defined reference ranges, assign UNKNOWN
+    # When a TestType has no defined reference ranges, assign UNKNOWN
     if test_type.ref_low is None or test_type.ref_high is None:
         return "UNKNOWN"
     
@@ -38,16 +38,16 @@ def compute_status(test_type: TestType, value: float) -> str:
     critical_low = test_type.ref_low * 0.5
     critical_high = test_type.ref_high * 1.5
     
-    # Requirement 7.1: When a test value is below the reference low threshold, assign LOW
+    # When a test value is below the reference low threshold, assign LOW
     # Also handle CRITICAL_LOW for values significantly below threshold
     if value < critical_low:
         return "CRITICAL_LOW"
     elif value < test_type.ref_low:
         return "LOW"
-    # Requirement 7.2: When a test value is between ref_low and ref_high (inclusive), assign NORMAL
+    # When a test value is between ref_low and ref_high (inclusive), assign NORMAL
     elif value <= test_type.ref_high:
         return "NORMAL"
-    # Requirement 7.3: When a test value is above the reference high threshold, assign HIGH
+    # When a test value is above the reference high threshold, assign HIGH
     # Also handle CRITICAL_HIGH for values significantly above threshold
     elif value <= critical_high:
         return "HIGH"

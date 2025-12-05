@@ -36,12 +36,11 @@ def generate_guidance(
             "disclaimer": str            # Medical disclaimer
         }
     
-    Validates: Requirements 12.3, 12.4, 12.5, 13.1, 13.2, 13.3, 13.4, 13.5
     """
-    # Requirement 12.4: Compute trend indicator when previous result exists
+    # Compute trend indicator when previous result exists
     trend = _compute_trend(test_type, value, status, previous_value)
     
-    # Requirement 12.3, 13.1, 13.2, 13.3: Generate panel-specific messages
+    # Generate panel-specific messages
     panel_key = test_type.panel.key
     
     if panel_key == "CBC":
@@ -57,7 +56,7 @@ def generate_guidance(
         message = f"This test measures {test_type.display_name}."
         suggestions = ["Consult your doctor for interpretation of this result."]
     
-    # Requirement 12.5, 13.4, 13.5: Always include disclaimer
+    # Always include disclaimer
     disclaimer = (
         "This is general educational information and NOT a medical diagnosis. "
         "Please consult a qualified doctor for medical advice and clinical decisions."
@@ -93,8 +92,6 @@ def _compute_trend(
         - stable: Change is less than 5% of reference range
         - improving: Moving toward normal range
         - worsening: Moving away from normal range
-    
-    Validates: Requirement 12.4
     """
     if previous_value is None:
         return None
@@ -216,8 +213,6 @@ def _generate_cbc_message(test_type: TestType, status: str) -> str:
 def _generate_metabolic_message(test_type: TestType, status: str) -> str:
     """
     Generate Metabolic Panel-specific educational messages about organ function.
-    
-    Validates: Requirement 13.2
     """
     test_key = test_type.key
     
