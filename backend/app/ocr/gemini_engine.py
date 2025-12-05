@@ -22,6 +22,8 @@ class ExtractionResult:
     test_results: List[Dict]
     raw_response: str
     success: bool
+    patient_gender: Optional[str] = None  # 'M', 'F', or None
+    patient_age: Optional[int] = None  # Age in years
     error_message: Optional[str] = None
 
 
@@ -57,15 +59,16 @@ class GeminiEngine:
         Returns:
             Detailed prompt with instructions and JSON schema
         """
-        return """You are a medical report analyzer. Extract ALL test results from this medical lab report image.
+        return """You are a medical report analyzer. Extract ALL test results AND patient demographics from this medical lab report image.
 
 **Instructions:**
-1. Identify all test names, their numeric values, and units
-2. Focus on these test panels: CBC (Complete Blood Count), Metabolic Panel, and Lipid Panel
-3. Return results in valid JSON format only
-4. If a test doesn't have a unit, use an empty string
-5. Be precise with numeric values (include decimals)
-6. Normalize test names to common medical abbreviations when possible
+1. Identify patient information: gender (M/F) and age (in years)
+2. Identify all test names, their numeric values, and units
+3. Focus on these test panels: CBC (Complete Blood Count), Metabolic Panel, and Lipid Panel
+4. Return results in valid JSON format only
+5. If a test doesn't have a unit, use an empty string
+6. Be precise with numeric values (include decimals)
+7. Normalize test names to common medical abbreviations when possible
 
 **Supported Tests:**
 - CBC: WBC, RBC, Hemoglobin, Hematocrit, Platelets, MCV
@@ -74,6 +77,10 @@ class GeminiEngine:
 
 **Output Format (JSON only, no markdown):**
 {
+  "patient_info": {
+    "gender": "M",
+    "age": 45
+  },
   "test_results": [
     {
       "test_name": "WBC",
@@ -90,8 +97,12 @@ class GeminiEngine:
 
 **Important:**
 - Return ONLY valid JSON, no additional text or markdown formatting
-- If no tests are found, return: {"test_results": []}
+- If gender is not found, use null for gender
+- If age is not found, use null for age
+- If no tests are found, return: {"patient_info": {"gender": null, "age": null}, "test_results": []}
 - Ensure all numeric values are numbers, not strings
+- Gender should be "M" for male, "F" for female, or null if not specified
+- Age should be a number (integer) or null if not specified
 """
     
     def process_image(self, image_bytes: bytes) -> ExtractionResult:
@@ -112,9 +123,9 @@ class GeminiEngine:
             prompt = self._create_prompt()
             
             # Generate content with Gemini using new SDK
-            # Use Gemini 2.0 Flash for best performance and accuracy
+            # Use Gemini 2.5 Flash for stable performance with better free tier quotas
             response = GeminiEngine._client.models.generate_content(
-                model='gemini-2.0-flash-exp',
+                model='gemini-2.5-flash',
                 contents=[prompt, image]
             )
             
@@ -198,7 +209,7 @@ class GeminiEngine:
             
             # Generate content with Gemini using new SDK
             response = GeminiEngine._client.models.generate_content(
-                model='gemini-2.0-flash-exp',
+                model='gemini-2.5-flash',
                 contents=full_prompt
             )
             
@@ -242,6 +253,28 @@ class GeminiEngine:
             # Parse JSON
             data = json.loads(cleaned_text)
             
+            # Extract patient demographics
+            patient_info = data.get("patient_info", {})
+            patient_gender = patient_info.get("gender") if patient_info else None
+            patient_age = patient_info.get("age") if patient_info else None
+            
+            # Validate and normalize gender
+            if patient_gender and isinstance(patient_gender, str):
+                patient_gender = patient_gender.upper()
+                if patient_gender not in ['M', 'F']:
+                    patient_gender = None
+            else:
+                patient_gender = None
+            
+            # Validate age
+            if patient_age is not None:
+                try:
+                    patient_age = int(patient_age)
+                    if patient_age < 0 or patient_age > 150:
+                        patient_age = None
+                except (ValueError, TypeError):
+                    patient_age = None
+            
             # Extract test results
             test_results = data.get("test_results", [])
             
@@ -264,6 +297,8 @@ class GeminiEngine:
                 test_results=validated_results,
                 raw_response=response_text,
                 success=len(validated_results) > 0,
+                patient_gender=patient_gender,
+                patient_age=patient_age,
                 error_message=None
             )
             
@@ -298,6 +333,8 @@ def extract_with_gemini(file_bytes: bytes, is_pdf: bool = False) -> dict:
             - test_results: List of extracted test results
             - raw_response: Raw response from Gemini
             - success: Whether extraction was successful
+            - patient_gender: Patient gender ('M', 'F', or None)
+            - patient_age: Patient age in years (or None)
             - error_message: Error message if extraction failed
     """
     engine = GeminiEngine()
@@ -311,5 +348,7 @@ def extract_with_gemini(file_bytes: bytes, is_pdf: bool = False) -> dict:
         "test_results": result.test_results,
         "raw_response": result.raw_response,
         "success": result.success,
+        "patient_gender": result.patient_gender,
+        "patient_age": result.patient_age,
         "error_message": result.error_message
     }

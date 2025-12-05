@@ -108,7 +108,7 @@ def health_check():
     Health check endpoint.
     
     Returns the health status of the API.
-    Can be extended to check database connectivity, OCR engine availability, etc.
+    Can be extended to check database connectivity, Gemini API availability, etc.
     """
     return {
         "status": "healthy",

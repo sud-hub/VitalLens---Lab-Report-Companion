@@ -42,9 +42,9 @@ async def upload_report(
     This endpoint:
     1. Validates file type and size
     2. Creates a Report record
-    3. Uses Gemini LLM to extract test values from the uploaded file
+    3. Uses Gemini LLM to extract test values and patient demographics from the uploaded file
     4. Maps test names to TestTypes using aliases
-    5. Computes status for each test based on reference ranges
+    5. Computes personalized status for each test based on reference ranges and demographics
     6. Saves TestResult records
     7. Marks Report as successful or failed
     
@@ -114,9 +114,11 @@ async def upload_report(
                 test_count=0
             )
         
-        # Get extracted test results (already parsed by Gemini)
+        # Get extracted test results and patient demographics
         parsed_tests = gemini_result.get("test_results", [])
         raw_response = gemini_result.get("raw_response", "")
+        patient_gender = gemini_result.get("patient_gender")
+        patient_age = gemini_result.get("patient_age")
         
         # Requirement 4.4: Handle extraction failure
         if not parsed_tests:
@@ -125,7 +127,9 @@ async def upload_report(
                 report_id=report.id,
                 raw_text=raw_response,
                 success=False,
-                notes="Gemini extraction completed but no test results found"
+                notes="Gemini extraction completed but no test results found",
+                patient_gender=patient_gender,
+                patient_age=patient_age
             )
             return ReportSummary(
                 id=report.id,
@@ -154,8 +158,14 @@ async def upload_report(
                 skipped_tests.append(test_name_raw)
                 continue
             
-            # Requirements 7.1, 7.2, 7.3: Compute status based on reference ranges
-            test_status = compute_status(test_type, value)
+            # Requirements 7.1, 7.2, 7.3: Compute personalized status based on reference ranges
+            # Use patient demographics for personalized reference ranges
+            test_status = compute_status(
+                test_type=test_type,
+                value=value,
+                patient_gender=patient_gender,
+                patient_age=patient_age
+            )
             
             # Requirements 8.1, 8.2: Save TestResult record
             test_crud.create_test_result(
@@ -178,13 +188,25 @@ async def upload_report(
             if len(skipped_tests) > 5:
                 notes += f" and {len(skipped_tests) - 5} more"
         
-        # Requirement 8.4: Update report with final status
+        # Add demographics info to notes if available
+        if patient_gender or patient_age:
+            demo_info = []
+            if patient_gender:
+                demo_info.append(f"Gender: {patient_gender}")
+            if patient_age:
+                demo_info.append(f"Age: {patient_age}")
+            demo_note = f"Patient demographics: {', '.join(demo_info)}"
+            notes = f"{notes}. {demo_note}" if notes else demo_note
+        
+        # Requirement 8.4: Update report with final status and demographics
         report = report_crud.update_report_ocr(
             db=db,
             report_id=report.id,
             raw_text=raw_response,
             success=success,
-            notes=notes
+            notes=notes,
+            patient_gender=patient_gender,
+            patient_age=patient_age
         )
         
         return ReportSummary(

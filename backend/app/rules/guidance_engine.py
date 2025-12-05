@@ -311,6 +311,7 @@ def _generate_lipid_message(test_type: TestType, status: str) -> str:
             "NORMAL": "HDL (\"good\" cholesterol) helps remove cholesterol from arteries. Your level is within the protective range.",
             "LOW": "HDL (\"good\" cholesterol) helps remove cholesterol from arteries. Low levels may increase cardiovascular risk.",
             "HIGH": "HDL (\"good\" cholesterol) helps remove cholesterol from arteries. High levels are generally protective for heart health.",
+            "PROTECTIVE": "HDL (\"good\" cholesterol) helps remove cholesterol from arteries. Your level is excellent and provides strong protection against heart disease!",
             "CRITICAL_LOW": "HDL (\"good\" cholesterol) helps remove cholesterol from arteries. Very low levels increase heart disease risk.",
             "CRITICAL_HIGH": "HDL (\"good\" cholesterol) helps remove cholesterol from arteries. Very high levels are generally favorable.",
         },
@@ -384,6 +385,13 @@ def _generate_lipid_suggestions(test_type: TestType, status: str) -> List[str]:
             "Continue maintaining heart-healthy habits.",
             "Regular exercise and a balanced diet support cardiovascular health.",
             "Regular monitoring helps track your heart health over time.",
+        ]
+    elif status == "PROTECTIVE":
+        # Special case for excellent HDL levels
+        return [
+            "Excellent! Your HDL level provides strong heart protection.",
+            "Continue your current healthy lifestyle to maintain these levels.",
+            "Regular exercise and a balanced diet support optimal HDL levels.",
         ]
     elif status in ["LOW", "CRITICAL_LOW"]:
         # For lipids, low is often good (except HDL)

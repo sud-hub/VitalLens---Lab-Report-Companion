@@ -63,6 +63,10 @@ class Report(Base):
     parsed_success = Column(Boolean, default=False)
     notes = Column(String, nullable=True)
     
+    # Patient demographics for personalized reference ranges
+    patient_gender = Column(String, nullable=True)  # 'M', 'F', or None
+    patient_age = Column(Integer, nullable=True)  # Age in years
+    
     user = relationship("User", back_populates="reports")
     test_results = relationship("TestResult", back_populates="report")
 

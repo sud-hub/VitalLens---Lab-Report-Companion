@@ -1,16 +1,13 @@
-"""OCR module for text extraction from images and PDFs."""
+"""
+AI extraction module for text and data extraction from medical reports.
 
-from .engine import run_ocr_on_image_bytes, OCRResult, OCREngine
-from .postprocess import clean_ocr_text, normalize_test_name, extract_numeric_value
+This module uses Google's Gemini AI for accurate extraction of test results
+and patient demographics from lab report images and PDFs.
+"""
+
 from .gemini_engine import extract_with_gemini, GeminiEngine, ExtractionResult
 
 __all__ = [
-    'run_ocr_on_image_bytes',
-    'OCRResult',
-    'OCREngine',
-    'clean_ocr_text',
-    'normalize_test_name',
-    'extract_numeric_value',
     'extract_with_gemini',
     'GeminiEngine',
     'ExtractionResult',

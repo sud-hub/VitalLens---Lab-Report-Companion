@@ -1,13 +1,52 @@
 """
 Lab Report Parser module for extracting test results from OCR text.
 
-This module parses OCR-extracted text to identify test names, values, and units
-for the three supported lab panels: CBC, Metabolic Panel, and Lipid Panel.
+NOTE: This module is legacy code from the OCR-based implementation.
+The current system uses Gemini AI for extraction (see app.ocr.gemini_engine).
+This module is kept for backward compatibility and testing purposes only.
 """
 
 import re
 from typing import List, Dict, Optional
-from app.ocr.postprocess import clean_ocr_text, normalize_test_name, extract_numeric_value
+
+
+# Inline helper functions (previously from app.ocr.postprocess)
+def clean_ocr_text(text: str) -> str:
+    """Clean OCR text by removing extra whitespace and normalizing."""
+    if not text:
+        return ""
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text)
+    # Normalize line breaks
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    return text.strip()
+
+
+def normalize_test_name(name: str) -> str:
+    """Normalize test name to lowercase without special characters."""
+    if not name:
+        return ""
+    # Convert to lowercase
+    name = name.lower()
+    # Remove special characters except spaces and hyphens
+    name = re.sub(r'[^a-z0-9\s\-]', '', name)
+    # Remove extra whitespace
+    name = re.sub(r'\s+', ' ', name)
+    return name.strip()
+
+
+def extract_numeric_value(text: str) -> Optional[float]:
+    """Extract numeric value from text."""
+    if not text:
+        return None
+    # Find first number in text
+    match = re.search(r'[\d.]+', text)
+    if match:
+        try:
+            return float(match.group())
+        except ValueError:
+            return None
+    return None
 
 
 def parse_lab_report(ocr_result: dict) -> List[Dict]:

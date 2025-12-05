@@ -14,14 +14,16 @@ import os
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import sessionmaker, Session, relationship, declarative_base
 from sqlalchemy.sql import func
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Load settings
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./lab_companion.db"
     
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"  # Ignore extra fields in .env file
+    )
 
 settings = Settings()
 

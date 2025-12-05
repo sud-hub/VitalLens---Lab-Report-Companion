@@ -33,10 +33,12 @@ def update_report_ocr(
     report_id: int, 
     raw_text: str, 
     success: bool,
-    notes: str | None = None
+    notes: str | None = None,
+    patient_gender: str | None = None,
+    patient_age: int | None = None
 ) -> Report:
     """
-    Update a report with OCR results and parsing status.
+    Update a report with OCR results, parsing status, and patient demographics.
     
     Args:
         db: Database session
@@ -44,6 +46,8 @@ def update_report_ocr(
         raw_text: Raw text extracted from OCR
         success: Whether parsing was successful
         notes: Optional notes about the processing
+        patient_gender: Patient gender ('M' or 'F')
+        patient_age: Patient age in years
         
     Returns:
         Updated Report object
@@ -60,6 +64,12 @@ def update_report_ocr(
     
     if notes is not None:
         db_report.notes = notes
+    
+    # Save patient demographics if provided
+    if patient_gender is not None:
+        db_report.patient_gender = patient_gender
+    if patient_age is not None:
+        db_report.patient_age = patient_age
     
     db.commit()
     db.refresh(db_report)
