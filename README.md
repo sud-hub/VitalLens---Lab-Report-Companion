@@ -15,7 +15,7 @@ The system exclusively supports three lab panels:
 
 ### Key Features
 
-- **AI-Powered Extraction**: Uses Google Gemini 2.0 Flash for accurate test result and patient demographic extraction
+- **AI-Powered Extraction**: Uses Google Gemini 2.5 Flash for accurate test result and patient demographic extraction
 - **Personalized Reference Ranges**: Gender and age-specific reference ranges for more accurate health assessments
 - **Historical Tracking**: View test results over time with interactive charts
 - **Educational Insights**: Get personalized information about your test results with trend analysis
@@ -30,7 +30,7 @@ The system exclusively supports three lab panels:
 - FastAPI
 - SQLAlchemy with Alembic migrations
 - PostgreSQL (production) / SQLite (development)
-- **Google Gemini 2.0 Flash** for AI-powered extraction
+- **Google Gemini 2.5 Flash** for AI-powered extraction
 - JWT authentication with bcrypt password hashing
 
 ### Frontend
@@ -382,71 +382,37 @@ If patient demographics (gender/age) are not detected in the lab report, the sys
 
 For more details, see [`backend/PERSONALIZED_RANGES.md`](backend/PERSONALIZED_RANGES.md)
 
-## Troubleshooting
-
-### Backend Issues
-
-**Issue**: `ModuleNotFoundError` when running the backend
-- **Solution**: Ensure virtual environment is activated and dependencies are installed
-
-**Issue**: Database connection errors
-- **Solution**: Check `DATABASE_URL` in `.env` file and ensure database exists
-
-**Issue**: Gemini API errors or extraction fails
-- **Solution**: 
-  - Verify `GEMINI_API_KEY` is set correctly in `.env`
-  - Check your API key is valid at [Google AI Studio](https://aistudio.google.com/app/apikey)
-  - Ensure you have API quota available
-  - Check internet connectivity (Gemini requires external API calls)
-
-**Issue**: Patient demographics not extracted
-- **Solution**: 
-  - Ensure lab report clearly shows patient gender and age
-  - System will fall back to default ranges if demographics aren't found
-  - Check the report notes field for extraction details
-
-### Frontend Issues
-
-**Issue**: API requests fail with CORS errors
-- **Solution**: Check `BACKEND_CORS_ORIGINS` in backend `.env` includes your frontend URL
-
-**Issue**: `npm install` fails
-- **Solution**: Ensure Node.js version is 18 or higher
-
-**Issue**: Charts not displaying
-- **Solution**: Check browser console for errors and ensure test data exists
-
 ## Important Disclaimers
 
-⚠️ **Medical Disclaimer**: This application provides educational information only and is NOT a medical diagnosis tool. All insights and guidance are for general educational purposes. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment decisions.
+**Medical Disclaimer**: This application provides educational information only and is NOT a medical diagnosis tool. All insights and guidance are for general educational purposes. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment decisions.
 
-⚠️ **Data Accuracy**: AI extraction may not perfectly extract all values from lab reports. Always verify extracted values against your original lab report.
+**Data Accuracy**: AI extraction may not perfectly extract all values from lab reports. Always verify extracted values against your original lab report.
 
-⚠️ **Privacy & Data Security**: 
+**Privacy & Data Security**: 
 - This application stores data locally in your database
 - **Gemini API**: Currently uses Google's Gemini API which requires sending lab report images to Google's servers
 - For production use, implement appropriate security measures and comply with healthcare data regulations (HIPAA, GDPR, etc.)
 - Consider the OCR engine enhancement (see Future Enhancements) for fully offline, privacy-focused processing
 
-⚠️ **API Costs**: Google Gemini API usage may incur costs depending on your usage volume. Monitor your API usage at [Google AI Studio](https://aistudio.google.com/app/apikey).
+**API Costs**: Google Gemini API usage may incur costs depending on your usage volume. Monitor your API usage at [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 ## Future Enhancements
 
 ### 1. Advanced OCR Engine (High Priority)
 
 **Current Implementation**: Uses Google Gemini API for extraction
-- ✅ **Pros**: Highly accurate, extracts demographics automatically, minimal setup
-- ❌ **Cons**: Requires external API calls, data sent to Google servers, API costs, internet dependency
+- **Pros**: Highly accurate, extracts demographics automatically, minimal setup
+- **Cons**: Requires external API calls, data sent to Google servers, API costs, internet dependency
 
 **Planned Enhancement**: Offline OCR with PaddleOCR or Tesseract
-- ✅ **Benefits**:
+- **Benefits**:
   - **Enhanced Data Security**: All processing happens locally, no data leaves your server
   - **HIPAA/GDPR Compliance**: Better suited for healthcare data regulations
   - **No API Costs**: Completely free after initial setup
   - **Offline Capability**: Works without internet connection
   - **Full Data Control**: Complete ownership of processing pipeline
   - **Privacy-First**: Ideal for sensitive medical information
-- ⚠️ **Trade-offs**:
+- **Trade-offs**:
   - Requires more complex setup (OCR dependencies, models)
   - May need additional processing for demographic extraction
   - Potentially lower accuracy on poor-quality images
@@ -481,61 +447,6 @@ For more details, see [`backend/PERSONALIZED_RANGES.md`](backend/PERSONALIZED_RA
 - Kidney Function Tests (eGFR, Albumin)
 - Vitamin Levels (D, B12, Folate)
 - Hormone Panels
-
-### 5. User Experience Improvements
-
-- **Mobile App**: Native iOS/Android applications
-- **Report Templates**: Support for multiple lab formats
-- **Batch Upload**: Process multiple reports at once
-- **Export Features**: PDF reports, CSV exports
-- **Sharing**: Secure sharing with healthcare providers
-
-### 6. Integration Features
-
-- **EHR Integration**: Connect with electronic health records
-- **Doctor Portal**: Allow physicians to review patient results
-- **Appointment Scheduling**: Book follow-ups based on results
-- **Medication Tracking**: Link test results with medications
-
-## Development
-
-### Backend Development
-
-The backend follows a layered architecture:
-1. **API Layer**: FastAPI routers handle HTTP requests
-2. **Business Logic**: AI extraction, parsing, and rules engines
-3. **Data Access**: CRUD operations abstract database access
-4. **Models**: SQLAlchemy ORM models define database schema
-
-### Frontend Development
-
-The frontend is a single-page application:
-- **Pages**: Top-level route components
-- **Components**: Reusable UI components
-- **API Client**: Axios instance with JWT interceptors
-
-### Adding New Lab Panels
-
-To add support for additional lab panels:
-1. Add panel to seed data in `seed_data.py`
-2. Add test types with reference ranges
-3. Add test aliases for parsing variations
-4. Update Gemini prompt in `app/ocr/gemini_engine.py` (or parser logic if using OCR)
-5. Add guidance messages in `app/rules/guidance_engine.py`
-6. Consider gender/age-specific ranges in `app/rules/personalized_ranges.py`
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit pull requests or open issues for:
-- Bug fixes
-- New features (especially OCR engine implementation!)
-- Documentation improvements
-- Test coverage
-- Performance optimizations
-
-## License
-
-This project is for educational purposes. Please ensure compliance with healthcare data regulations in your jurisdiction before deploying in production.
 
 ---
 
